@@ -6,11 +6,11 @@ load_dotenv()
 class Settings:
     # Groq API
     GROQ_API_KEY = os.getenv("GROQ_API_KEY")
-    GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
+    GROQ_MODEL = os.getenv("GROQ_MODEL")
 
     # MongoDB
-    MONGODB_URI = os.getenv("MONGODB_URI", "mongodb+srv://fikalegesse:kv0LvHDIKnVqUVjr@cluster0.bnrizqr.mongodb.net/ai_assistant?appName=Cluster0")
-    DATABASE_NAME = os.getenv("DATABASE_NAME", "ai_assistant")
+    MONGODB_URI = os.getenv("MONGODB_URI")
+    DATABASE_NAME = os.getenv("DATABASE_NAME")
 
     # Data Path
     DATA_PATH = "D:/Data"
