@@ -9,7 +9,7 @@ class Settings:
     GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
 
     # MongoDB
-    MONGODB_URI = os.getenv("MONGODB_URI", "mongodb://localhost:27017")
+    MONGODB_URI = os.getenv("MONGODB_URI", "mongodb+srv://fikalegesse:kv0LvHDIKnVqUVjr@cluster0.bnrizqr.mongodb.net/ai_assistant?appName=Cluster0")
     DATABASE_NAME = os.getenv("DATABASE_NAME", "ai_assistant")
 
     # Data Path
