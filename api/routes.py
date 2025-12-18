@@ -3,6 +3,7 @@ from fastapi import APIRouter, HTTPException, Query, Depends, status, Background
 from fastapi.responses import FileResponse, HTMLResponse, StreamingResponse, JSONResponse
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from models.schemas import StatsResponse
+from services.chat_service import chat_service
 from db.database import db
 from datetime import datetime
 import uuid
@@ -13,7 +14,7 @@ from pydantic import BaseModel
 import secrets
 import logging
 import os
-from services.data_loader import data_loader
+from data_loader import data_loader
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -264,7 +265,7 @@ async def read_root():
                 <h1>🤖 AI Assistant</h1>
                 <p>Intelligent document search and conversational AI powered by advanced machine learning</p>
                 <div>
-                    <a href="/dashboard" class="btn">🚀 Get Started</a>
+                    <a href="/chat" class="btn">🚀 Get Started</a>
                     <a href="/login" class="btn">🔐 Login</a>
                 </div>
                 <div class="features">
@@ -282,6 +283,64 @@ async def read_root():
                     </div>
                 </div>
             </div>
+        </body>
+        </html>
+        """)
+
+@router.get("/chat", response_class=HTMLResponse)
+async def chat_page():
+    """Chat interface page (requires login)."""
+    try:
+        with open("templates/chat_interface.html", "r", encoding="utf-8") as f:
+            return f.read()
+    except FileNotFoundError:
+        return HTMLResponse("""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>AI Assistant - Chat</title>
+            <style>
+                body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background: #f5f5f5; }
+                .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; }
+                .message { padding: 10px; margin: 10px 0; border-radius: 5px; }
+                .user { background: #e3f2fd; text-align: right; }
+                .bot { background: #f5f5f5; }
+                input, button { padding: 10px; margin: 5px; }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <h1>AI Assistant Chat</h1>
+                <div id="chat-messages"></div>
+                <input type="text" id="user-input" placeholder="Type your message...">
+                <button onclick="sendMessage()">Send</button>
+            </div>
+            <script>
+                function sendMessage() {
+                    const input = document.getElementById('user-input');
+                    const message = input.value;
+                    if (!message) return;
+                    
+                    // Add user message
+                    const chat = document.getElementById('chat-messages');
+                    const userMsg = document.createElement('div');
+                    userMsg.className = 'message user';
+                    userMsg.textContent = 'You: ' + message;
+                    chat.appendChild(userMsg);
+                    
+                    // Clear input
+                    input.value = '';
+                    
+                    // Simulate bot response
+                    setTimeout(() => {
+                        const botMsg = document.createElement('div');
+                        botMsg.className = 'message bot';
+                        botMsg.textContent = 'AI: I received your message: ' + message;
+                        chat.appendChild(botMsg);
+                        chat.scrollTop = chat.scrollHeight;
+                    }, 1000);
+                }
+            </script>
         </body>
         </html>
         """)
@@ -323,6 +382,262 @@ async def admin_dashboard():
         </body>
         </html>
         """)
+
+# Protected public chat endpoints
+@router.post("/document-chat")
+async def document_chat(
+    chat_message: ChatMessage, 
+    current_user: dict = Depends(get_current_user)
+):
+    """Main endpoint for document-based chat."""
+    try:
+        user_query = chat_message.content.strip()
+        session_id = chat_message.session_id or str(uuid.uuid4())
+        user_id = str(current_user["_id"])
+        
+        if not user_query:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Message content cannot be empty"
+            )
+        
+        # Create or update chat session
+        if not db.get_chat_session(session_id):
+            db.create_chat_session(session_id, user_id)
+        
+        # Process chat (you might need to adjust this based on your chat_service)
+        result = await chat_service.process_document_chat(user_query)
+        
+        # Add messages to the session
+        user_message = {
+            "role": "user",
+            "content": user_query,
+            "timestamp": datetime.utcnow().isoformat()
+        }
+        assistant_message = {
+            "role": "assistant",
+            "content": result.get("response", "I'm sorry, I couldn't process your request."),
+            "documents_used": result.get("documents_used", []),
+            "timestamp": datetime.utcnow().isoformat()
+        }
+        
+        db.add_message_to_session(session_id, user_message)
+        db.add_message_to_session(session_id, assistant_message)
+        
+        result["session_id"] = session_id
+        return result
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Document chat error: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error processing chat message"
+        )
+
+@router.post("/chat-stream")
+async def chat_stream(
+    chat_message: ChatMessage,
+    current_user: dict = Depends(get_current_user)
+):
+    """Streaming endpoint for real-time responses."""
+    try:
+        user_query = chat_message.content.strip()
+        session_id = chat_message.session_id or str(uuid.uuid4())
+        user_id = str(current_user["_id"])
+        
+        if not user_query:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Please provide a question."
+            )
+        
+        # Create or get session
+        if not db.get_chat_session(session_id):
+            db.create_chat_session(session_id, user_id)
+        
+        # Add user message to session
+        user_message = {
+            "role": "user",
+            "content": user_query,
+            "timestamp": datetime.utcnow().isoformat()
+        }
+        db.add_message_to_session(session_id, user_message)
+        
+        # Find relevant documents for the query
+        relevant_docs = []
+        try:
+            if hasattr(chat_service, 'find_relevant_documents') and not chat_service.is_natural_conversation(user_query):
+                relevant_docs = chat_service.find_relevant_documents(user_query)
+        except Exception as e:
+            logger.warning(f"Document search failed: {e}")
+        
+        # Generate streaming response
+        async def generate():
+            try:
+                if hasattr(chat_service, 'generate_streaming_response'):
+                    async for chunk in chat_service.generate_streaming_response(user_query, relevant_docs, session_id):
+                        yield chunk
+                else:
+                    # Fallback response if chat_service doesn't support streaming
+                    yield f"data: {json.dumps({'type': 'content', 'content': 'I received your message: ' + user_query})}\n\n"
+                    yield f"data: {json.dumps({'type': 'complete'})}\n\n"
+            except Exception as e:
+                logger.error(f"Streaming error: {e}")
+                yield f"data: {json.dumps({'type': 'error', 'content': 'Sorry, an error occurred'})}\n\n"
+        
+        return StreamingResponse(
+            generate(),
+            media_type="text/event-stream"
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Chat stream error: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error in chat streaming"
+        )
+    
+
+#Chat Session Mnanagement Endpoints
+@router.get("/chat-sessions")
+async def get_chat_sessions(
+    limit: int = Query(10, ge=1, le=100, description="Number of sessions per page"),
+    offset: int = Query(0, ge=0, description="Page offset"),
+    current_user: dict = Depends(get_current_user)
+):
+    """Get paginated chat sessions for the current user."""
+    try:
+        user_id = str(current_user["_id"])
+        sessions = db.get_user_sessions(user_id, limit + offset)
+        
+        # Apply offset manually since MongoDB skip can be inefficient
+        paginated_sessions = sessions[offset:offset + limit]
+        
+        # Format sessions for frontend
+        formatted_sessions = []
+        for session in paginated_sessions:
+            # Generate title from first user message
+            title = "New Chat"
+            messages = session.get("messages", [])
+            for msg in messages:
+                if msg.get("role") == "user":
+                    content = msg.get("content", "")
+                    title = content[:50] + "..." if len(content) > 50 else content
+                    break
+            
+            formatted_sessions.append({
+                "session_id": session["session_id"],
+                "user_id": session["user_id"],
+                "title": title,
+                "message_count": len(messages),
+                "last_activity": session.get("updated_at", session.get("created_at")),
+                "created_at": session.get("created_at")
+            })
+        
+        return {
+            "sessions": formatted_sessions,
+            "pagination": {
+                "total": len(sessions),
+                "limit": limit,
+                "offset": offset,
+                "has_more": len(sessions) > offset + limit
+            }
+        }
+    except Exception as e:
+        logger.error(f"Get chat sessions error: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error retrieving chat sessions"
+        )
+
+@router.get("/chat-sessions/{session_id}")
+async def get_chat_session(
+    session_id: str, 
+    current_user: dict = Depends(get_current_user)
+):
+    """Get a specific chat session by ID."""
+    try:
+        user_id = str(current_user["_id"])
+        session = db.get_chat_session(session_id)
+        
+        if not session:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Chat session not found"
+            )
+            
+        if session["user_id"] != user_id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Access denied to this chat session"
+            )
+
+        return {
+            "session_id": session["session_id"],
+            "user_id": session["user_id"],
+            "messages": session.get("messages", []),
+            "created_at": session.get("created_at"),
+            "updated_at": session.get("updated_at")
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Get chat session error: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error loading chat session"
+        )
+
+@router.delete("/chat-sessions/{session_id}")
+async def delete_chat_session(
+    session_id: str, 
+    current_user: dict = Depends(get_current_user)
+):
+    """Delete a specific chat session."""
+    try:
+        user_id = str(current_user["_id"])
+        session = db.get_chat_session(session_id)
+        
+        if not session or session["user_id"] != user_id:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Chat session not found or access denied"
+            )
+
+        result = db.delete_chat_session(session_id)
+        if not result:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Chat session not found"
+            )
+        
+        return {"message": f"Chat session deleted successfully"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Delete chat session error: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error deleting chat session"
+        )
+
+@router.delete("/chat-sessions")
+async def delete_all_chat_sessions(current_user: dict = Depends(get_current_user)):
+    """Delete all chat sessions for the current user."""
+    try:
+        user_id = str(current_user["_id"])
+        deleted_count = db.delete_all_chat_sessions(user_id)
+        return {"message": f"Deleted {deleted_count} chat sessions"}
+    except Exception as e:
+        logger.error(f"Delete all chat sessions error: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error deleting all chat sessions"
+        )
 
 # Document management endpoints
 @router.get("/documents")

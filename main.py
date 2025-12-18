@@ -38,6 +38,7 @@ async def startup_event():
     """Initialize services on startup"""
     print("🚀 AI Assistant API starting up...")
     print(f"📊 Database: {settings.MONGODB_URI}")
+    print(f"🤖 AI Model: {settings.GROQ_MODEL}")
 
 @app.on_event("shutdown")
 async def shutdown_event():

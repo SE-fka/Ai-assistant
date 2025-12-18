@@ -1,13 +1,11 @@
 {
-    "total_files": 2,
-    "processed": 2,
-    "successful": 1,
+    "total_files": 1,
+    "processed": 1,
+    "successful": 0,
     "failed": 1,
     "skipped": 0,
     "errors": [],
-    "successful_files": [
-        "api.txt"
-    ],
+    "successful_files": [],
     "failed_files": {
         "AIorML.rtf": "Failed to insert document into database"
     },
