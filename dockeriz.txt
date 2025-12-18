@@ -1,0 +1,21 @@
+
+#mysql remote connection
+>CREATE USER 'root'@'172.21.22.98' IDENTIFIED BY 'osint';
+>GRANT ALL PRIVILEGES ON *.* TO 'root'@'172.21.22.98' WITH GRANT OPTION;
+
+>FLUSH PRIVILEGES;
+>sudo systemctl restart mysql
+#Test connection
+>mysql -u root -p -h 172.21.22.98
+#Check previlages
+>SELECT host FROM mysql.user WHERE user = 'root';
+#Delete ip
+>DROP USER 'root'@'172.21.22.98';
+
+>sudo docker ps -a
+>sudo docker stop mongodb
+>sudo docker rm mongodb
+>sudo docker run -d --name mongodb \
+  -p 27017:27017 \
+  mongo --noauth
+>sudo docker run -d --name adminer -p 0.0.0.0:8080:8080 --link mongodb:db adminer
