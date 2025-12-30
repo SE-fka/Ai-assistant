@@ -48,4 +48,4 @@ async def shutdown_event():
 # Only run this if the script is executed directly
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host=settings.APP_HOST)  # Removing port settings
+    uvicorn.run(app, host=settings.APP_HOST, port=int(os.environ.get("PORT", 8000)))  # Use PORT from environment
