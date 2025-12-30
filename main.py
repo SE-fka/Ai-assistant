@@ -45,11 +45,7 @@ async def shutdown_event():
     """Cleanup on shutdown"""
     print("👋 AI Assistant API shutting down...")
 
+# Only run this if the script is executed directly
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(
-        "main:app",
-        host=settings.APP_HOST,
-        port=settings.APP_PORT,
-        reload=True
-    )
+    uvicorn.run(app, host=settings.APP_HOST)  # Removing port settings
