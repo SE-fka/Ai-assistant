@@ -45,10 +45,8 @@ async def shutdown_event():
     """Cleanup on shutdown"""
     print("👋 AI Assistant API shutting down...")
 
-# Define default port directly
-DEFAULT_PORT = 8000  # or any port you prefer
-
-# Only run this if the script is executed directly
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host=settings.APP_HOST, port=DEFAULT_PORT)
+    port = int(os.environ.get("PORT", 8000))  # Use environment variable PORT
+    # This should now correctly bind to the PORT assigned by Render
+    uvicorn.run(app, host="0.0.0.0", port=port)
