@@ -50,6 +50,6 @@ if __name__ == "__main__":
     uvicorn.run(
         "main:app",
         host=settings.APP_HOST,
-        port=int(os.getenv("PORT", 8000)),
+        port=settings.APP_PORT,
         reload=True
     )
