@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart AI Assistant</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: 95vh;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            margin: 0;
+            font-size: 2.2em;
+        }
+        
+        .header p {
+            margin: 10px 0 0 0;
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+        
+        .status-bar {
+            background: #f8f9fa;
+            padding: 12px 25px;
+            border-bottom: 1px solid #dee2e6;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9em;
+        }
+        
+        .mode-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-weight: 500;
+        }
+        
+        .mode-documents {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .mode-conversation {
+            background: #e2e3e5;
+            color: #383d41;
+            border: 1px solid #d6d8db;
+        }
+        
+        .doc-count {
+            background: #17a2b8;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 10px;
+            font-size: 0.8em;
+        }
+        
+        .chat-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: #f8f9fa;
+        }
+        
+        .message {
+            margin: 15px 0;
+            padding: 0;
+            animation: fadeIn 0.3s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .user-message {
+            text-align: right;
+        }
+        
+        .user-bubble {
+            display: inline-block;
+            background: #007bff;
+            color: white;
+            padding: 12px 18px;
+            border-radius: 18px;
+            border-bottom-right-radius: 5px;
+            max-width: 70%;
+            text-align: left;
+        }
+        
+        .bot-bubble {
+            background: white;
+            border: 1px solid #dee2e6;
+            padding: 15px 20px;
+            border-radius: 15px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .bot-content {
+            line-height: 1.6;
+        }
+        
+        /* Document mode styling */
+        .document-content h3 {
+            color: #2c3e50;
+            margin: 15px 0 8px 0;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 4px;
+        }
+        
+        .document-content ul {
+            margin: 8px 0 8px 20px;
+        }
+        
+        .document-content li {
+            margin: 6px 0;
+        }
+        
+        .document-content code {
+            background: #f8f9fa;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            border: 1px solid #e9ecef;
+        }
+        
+        .sources {
+            background: #e8f4fd;
+            border-left: 4px solid #3498db;
+            padding: 8px 12px;
+            margin-top: 12px;
+            border-radius: 0 8px 8px 0;
+            font-size: 0.85em;
+        }
+        
+        /* Conversation mode styling */
+        .conversation-content {
+            color: #333;
+        }
+        
+        .input-area {
+            padding: 20px;
+            background: white;
+            border-top: 1px solid #dee2e6;
+            display: flex;
+            gap: 12px;
+        }
+        
+        .input-field {
+            flex: 1;
+            padding: 15px 20px;
+            border: 2px solid #e9ecef;
+            border-radius: 25px;
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.3s;
+            font-family: inherit;
+        }
+        
+        .input-field:focus {
+            border-color: #007bff;
+        }
+        
+        .send-button {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: transform 0.2s;
+            font-weight: 500;
+        }
+        
+        .send-button:hover {
+            transform: translateY(-2px);
+        }
+        
+        .send-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 15px;
+            color: #667eea;
+            display: none;
+        }
+        
+        .welcome-message {
+            text-align: center;
+            color: #666;
+            font-style: italic;
+            margin: 40px 20px;
+            font-size: 1.1em;
+            line-height: 1.6;
+        }
+        
+        .typing-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            color: #666;
+            font-style: italic;
+        }
+        
+        .typing-dot {
+            width: 6px;
+            height: 6px;
+            background: #666;
+            border-radius: 50%;
+            animation: typing 1.4s infinite;
+        }
+        
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+        
+        @keyframes typing {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-5px); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 Smart AI Assistant</h1>
+            <p>Intelligent conversations + Document search in one place</p>
+        </div>
+        
+        <div class="status-bar">
+            <div class="mode-indicator mode-conversation" id="modeIndicator">
+                <span>💬 Conversation Mode</span>
+            </div>
+            <button onclick="listDocuments()" style="padding: 6px 12px; background: #6c757d; color: white; border: none; border-radius: 15px; cursor: pointer; font-size: 0.85em;">
+                📁 List Documents
+            </button>
+        </div>
+        
+        <div class="chat-area" id="chatArea">
+            <div class="welcome-message">
+                👋 Hello! I'm your smart AI assistant. I automatically switch between:<br>
+                • <strong>Conversation Mode</strong> for casual chats (hello, how are you, etc.)<br>
+                • <strong>Document Mode</strong> for technical questions (API docs, guides, etc.)<br><br>
+                Try saying "hello" or ask about your documents!
+            </div>
+        </div>
+        
+        <div class="loading" id="loading">
+            <div class="typing-indicator" id="typingIndicator">
+                Thinking
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+            </div>
+        </div>
+        
+        <div class="input-area">
+            <input type="text" class="input-field" id="userInput" 
+                   placeholder="Type your message (I'll automatically choose the right mode)..." 
+                   onkeypress="handleKeyPress(event)">
+            <button class="send-button" onclick="sendMessage()" id="sendButton">
+                Send
+            </button>
+        </div>
+    </div>
+
+    <script>
+        async function sendMessage() {
+            const userInput = document.getElementById('userInput');
+            const message = userInput.value.trim();
+            
+            if (!message) return;
+            
+            // Add user message to chat
+            addMessage(message, 'user');
+            userInput.value = '';
+            
+            // Show loading with appropriate message
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('sendButton').disabled = true;
+            
+            // Guess mode for loading message
+            const isCasual = /hello|hi|hey|how are you|thanks|bye/i.test(message);
+            const loadingMsg = isCasual ? 
+                "Having a conversation..." : 
+                "Searching documents and crafting response...";
+            document.getElementById('typingIndicator').innerHTML = 
+                loadingMsg + ' <div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>';
+            
+            try {
+                const response = await fetch('/smart-chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        content: message
+                    })
+                });
+                
+                const data = await response.json();
+                
+                // Update mode indicator
+                updateModeIndicator(data.mode, data.documents_used);
+                
+                // Add bot message with appropriate styling
+                addBotMessage(data.response, data.mode, data.documents_used);
+                
+            } catch (error) {
+                console.error('Error:', error);
+                addBotMessage("Sorry, I'm having trouble connecting right now. Please try again.", "error", []);
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('sendButton').disabled = false;
+            }
+        }
+        
+        function updateModeIndicator(mode, documentsUsed) {
+            const indicator = document.getElementById('modeIndicator');
+            
+            if (mode === 'documents') {
+                indicator.className = 'mode-indicator mode-documents';
+                indicator.innerHTML = `📁 Document Mode <span class="doc-count">${documentsUsed.length} doc(s)</span>`;
+            } else {
+                indicator.className = 'mode-indicator mode-conversation';
+                indicator.innerHTML = '💬 Conversation Mode';
+            }
+        }
+        
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+        
+        async function listDocuments() {
+            try {
+                const response = await fetch('/list-documents');
+                const data = await response.json();
+                
+                let docList = "### Available Documents in D:/data 📂\n\n";
+                if (data.documents && data.documents.length > 0) {
+                    data.documents.forEach(doc => {
+                        docList += `• **${doc.name}** (${(doc.size / 1024).toFixed(1)} KB)\n`;
+                    });
+                    docList += `\n*Total: ${data.total_documents} documents*`;
+                } else {
+                    docList = "No documents found in D:/data folder. Add documents to enable Document Mode.";
+                }
+                
+                addBotMessage(docList, "documents", []);
+            } catch (error) {
+                addBotMessage("❌ Could not load document list. Make sure D:/data folder exists.", "error", []);
+            }
+        }
+        
+        function addMessage(content, sender) {
+            const chatArea = document.getElementById('chatArea');
+            
+            if (sender === 'user') {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'message user-message';
+                messageDiv.innerHTML = `<div class="user-bubble">${content}</div>`;
+                chatArea.appendChild(messageDiv);
+            }
+            
+            chatArea.scrollTop = chatArea.scrollHeight;
+            
+            // Remove welcome message after first real message
+            const welcomeMsg = chatArea.querySelector('.welcome-message');
+            if (welcomeMsg) {
+                welcomeMsg.remove();
+            }
+        }
+        
+        function addBotMessage(content, mode, documentsUsed) {
+            const chatArea = document.getElementById('chatArea');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message';
+            
+            let sourcesHtml = '';
+            if (mode === 'documents' && documentsUsed && documentsUsed.length > 0) {
+                sourcesHtml = `<div class="sources">📚 Sources: ${documentsUsed.join(', ')}</div>`;
+            }
+            
+            // Format content based on mode
+            let formattedContent = content;
+            if (mode === 'documents') {
+                // Convert markdown-like formatting for documents
+                formattedContent = content
+                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                    .replace(/`(.*?)`/g, '<code>$1</code>')
+                    .replace(/\n## (.*?)\n/g, '\n<h3>$1</h3>\n')
+                    .replace(/\n# (.*?)\n/g, '\n<h2>$1</h2>\n');
+                
+                messageDiv.innerHTML = `
+                    <div class="bot-bubble">
+                        <div class="bot-content document-content">${formattedContent}</div>
+                        ${sourcesHtml}
+                    </div>
+                `;
+            } else {
+                // Keep conversation mode simple
+                messageDiv.innerHTML = `
+                    <div class="bot-bubble">
+                        <div class="bot-content conversation-content">${formattedContent}</div>
+                        ${sourcesHtml}
+                    </div>
+                `;
+            }
+            
+            chatArea.appendChild(messageDiv);
+            chatArea.scrollTop = chatArea.scrollHeight;
+        }
+        
+        // Focus on input field when page loads
+        document.getElementById('userInput').focus();
+    </script>
+</body>
+</html>

@@ -14,7 +14,7 @@ from pydantic import BaseModel
 import secrets
 import logging
 import os
-from data_loader import data_loader
+from services.data_loader import data_loader
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)

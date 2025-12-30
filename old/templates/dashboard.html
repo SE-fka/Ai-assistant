@@ -1,0 +1,1218 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/x-icon" href="/static/logo.jpg">
+    <title>AI Assistant</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --success-color: #27ae60;
+            --warning-color: #f39c12;
+            --danger-color: #e74c3c;
+        }
+
+        /* Header Styles */
+        .header {
+            background: white;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 1rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header-left .logo {
+            display: flex;
+            align-items: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        .logo-icon {
+            margin-right: 10px;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 10px;
+            transition: background-color 0.3s ease;
+        }
+
+        .user-menu:hover {
+            background-color: #f8f9fa;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        .user-info {
+            text-align: left;
+        }
+
+        .username {
+            font-weight: bold;
+            margin-bottom: -2px;
+        }
+
+        .user-role {
+            font-size: 0.8rem;
+            color: #6c757d;
+        }
+
+        .dropdown-menu {
+            display: none;
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: white;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            padding: 0.5rem;
+            min-width: 200px;
+            z-index: 1001;
+        }
+
+        .dropdown-item {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+
+        .dropdown-item:hover {
+            background-color: #f8f9fa;
+        }
+
+        .dropdown-item span:first-child {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+        }
+
+        .dropdown-divider {
+            height: 1px;
+            background-color: #e9ecef;
+            margin: 0.5rem 0;
+        }
+
+        .dashboard-header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-card.primary {
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .stat-card.success {
+            border-left: 4px solid var(--success-color);
+        }
+
+        .stat-card.warning {
+            border-left: 4px solid var(--warning-color);
+        }
+
+        .stat-card.danger {
+            border-left: 4px solid var(--danger-color);
+        }
+
+        .chart-container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .document-table {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .search-box {
+            border-radius: 25px;
+            border: 2px solid #e9ecef;
+            padding: 10px 20px;
+        }
+
+        .file-type-badge {
+            font-size: 0.7em;
+            padding: 0.3em 0.6em;
+        }
+
+        .processing-card {
+            border-left: 4px solid #6f42c1;
+        }
+
+        .success-file {
+            color: var(--success-color);
+        }
+
+        .failed-file {
+            color: var(--danger-color);
+        }
+
+        .progress-ring {
+            transform: rotate(-90deg);
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            position: absolute;
+            right: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <div>
+        <!-- Header -->
+        <div class="header">
+            <div class="container">
+                <div class="row align-items-center">
+                    <div class="col-md-6 header-left">
+                        <div class="logo">
+                            <span class="logo-icon">
+                                <img src="/static/logo.jpg" alt="AI Assistant Logo"
+                                    style="width: 40px; height: auto; border-radius: 50%;">
+                            </span>
+                            <span>Dashboard</span>
+                        </div>
+                    </div>
+                    <div class="col-md-6 header-right">
+                        <div class="user-menu" id="user-menu">
+                            <div class="user-avatar" id="user-avatar">G</div>
+                            <div class="user-info">
+                                <div class="username" id="username">Guest</div>
+                                <div class="user-role" id="user-role">User</div>
+                            </div>
+                            &nbsp;&nbsp; <i class="fas fa-chevron-down ms-2"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dropdown Menu -->
+            <div class="dropdown-menu" id="dropdown-menu">
+                <div class="dropdown-item">
+                    <span>👤</span>
+                    <span>Profile</span>
+                </div>
+                <div class="dropdown-content">
+                    <a href="/chat" class="dropdown-item">
+                        <span>⚙️</span>
+                        <span>AI Assistant</span>
+                    </a>
+                </div>
+                <div class="dropdown-divider"></div>
+                <div class="dropdown-item" onclick="logout()">
+                    <i class="fas fa-sign-out-alt" style="margin-left: 8px; margin-right: 8px;"></i>
+                    <span> Sign Out</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dashboard Header -->
+        <div class="dashboard-header">
+            <div class="container">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <h1 class="display-5 fw-bold">
+                            <i class="fas fa-chart-line me-3"></i>
+                            Analytics
+                        </h1>
+                        <p class="lead mb-0">Real-time insights into your document management system</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="container-fluid">
+            <!-- Summary Stats -->
+            <div class="row mb-4">
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card stat-card primary h-100">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-8">
+                                    <h6 class="card-title text-muted mb-2">Total Documents</h6>
+                                    <h2 class="fw-bold" id="total-documents">0</h2>
+                                    <p class="mb-0 text-muted">Across all file types</p>
+                                </div>
+                                <div class="col-4 text-end">
+                                    <i class="fas fa-file-alt fa-3x text-primary"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card stat-card warning h-100">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-8">
+                                    <h6 class="card-title text-muted mb-2">Total Chunks</h6>
+                                    <h2 class="fw-bold" id="total-chunks">0</h2>
+                                    <p class="mb-0 text-muted">Document fragments</p>
+                                </div>
+                                <div class="col-4 text-end">
+                                    <i class="fas fa-puzzle-piece fa-3x text-warning"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card stat-card danger h-100">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-8">
+                                    <h6 class="card-title text-muted mb-2">File Types</h6>
+                                    <h2 class="fw-bold" id="file-types-count">0</h2>
+                                    <p class="mb-0 text-muted">Different formats</p>
+                                </div>
+                                <div class="col-4 text-end">
+                                    <i class="fas fa-file-code fa-3x text-danger"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card stat-card success h-100">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-8">
+                                    <h6 class="card-title text-muted mb-2">Total Sessions</h6>
+                                    <h2 class="fw-bold" id="total-sessions">0</h2>
+                                    <p class="mb-0 text-muted">Processing sessions</p>
+                                </div>
+                                <div class="col-4 text-end">
+                                    <i class="fas fa-play-circle fa-3x text-success"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Charts Row -->
+            <div class="row mb-4">
+                <!-- Document Types Distribution -->
+                <div class="col-lg-4 mb-4">
+                    <div class="chart-container">
+                        <br />
+                        <h5 class="card-title">
+                            <i class="fas fa-chart-pie me-2"></i>Documents by Type
+                        </h5>
+                        <canvas id="typeChart" height="250" width="150"></canvas>
+                    </div>
+                </div>
+
+                <!-- Chunks Distribution -->
+                <div class="col-lg-8 mb-4">
+                    <div class="chart-container">
+                        <h5 class="card-title">
+                            <i class="fas fa-chart-bar me-2"></i>Chunks by File Type
+                        </h5>
+                        <canvas id="chunksChart" height="150" width="300"></canvas>
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- Processing Results Section -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card processing-card">
+                        <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">
+                                <i class="fas fa-cogs me-2"></i>Latest Processing Results
+                            </h5>
+                            <button class="btn btn-outline-primary btn-sm" onclick="runBatchProcessing()">
+                                <i class="fas fa-play me-1"></i>Run Batch Processing
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <div id="processing-results">
+                                <div class="text-center text-muted py-4">
+                                    <i class="fas fa-sync fa-spin fa-2x mb-3"></i><br>
+                                    Loading processing results...
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Documents Table -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="document-table" style="padding: 10px;">
+                        <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">
+                                <i class="fas fa-file me-2"></i>All Documents
+                            </h5>
+                            <div class="d-flex">
+                                <div class="input-group me-2" style="width: 300px;">
+                                    <input type="text" class="form-control search-box" id="search-query"
+                                        placeholder="Search documents...">
+                                    <button class="btn btn-outline-secondary" onclick="searchDocuments()">
+                                        <i class="fas fa-search"></i>
+                                    </button>
+                                </div>
+                                <button class="btn btn-primary" onclick="loadDocuments()">
+                                    <i class="fas fa-sync-alt"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>#</th>
+                                            <th>Name</th>
+                                            <th>Type</th>
+                                            <th>Size</th>
+                                            <th>Chunks</th>
+                                            <th>Path</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="documents-table">
+                                        <!-- Documents will be loaded here -->
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mt-3">
+                                <div class="text-muted">
+                                    Showing <span id="showing-count">0</span> of <span id="total-count">0</span>
+                                    documents
+                                </div>
+                                <div class="btn-group">
+                                    <button class="btn btn-outline-secondary btn-sm" onclick="previousPage()">
+                                        <i class="fas fa-chevron-left"></i>
+                                    </button>
+                                    <button class="btn btn-outline-secondary btn-sm" onclick="nextPage()">
+                                        <i class="fas fa-chevron-right"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <br />
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // Global variables
+        let authToken = null;
+        let currentUser = null;
+        let currentPage = 1;
+        const pageSize = 10;
+        let allDocuments = [];
+        let charts = {};
+        let currentPageSuccess = 0;
+        let currentPageFailed = 0;
+        const itemsPerPage = 10;
+        let currentResults = null;
+
+        // Initialize dashboard with authentication check
+        document.addEventListener('DOMContentLoaded', function () {
+            // First, check authentication
+            if (!checkAuthentication()) {
+                return; // Stop execution if not authenticated
+            }
+
+            // Only load dashboard if authenticated
+            loadStats();
+            loadDocuments();
+            loadProcessingResults();
+            initializeCharts();
+            setupHeaderInteractions();
+        });
+
+        // Check authentication on page load
+        function checkAuthentication() {
+            const savedToken = localStorage.getItem('authToken');
+            const savedUser = localStorage.getItem('currentUser');
+
+            if (!savedToken || !savedUser) {
+                window.location.href = '/';
+                return false;
+            }
+
+            authToken = savedToken;
+            currentUser = JSON.parse(savedUser);
+
+            // Update UI with user info
+            document.getElementById('username').textContent = currentUser.username;
+            document.getElementById('user-avatar').textContent = currentUser.username.charAt(0).toUpperCase();
+            document.getElementById('user-role').textContent = currentUser.role;
+
+            return true;
+        }
+
+        // Enhanced API calls with authentication
+        async function makeAuthenticatedRequest(url, options = {}) {
+            if (!authToken) {
+                if (!checkAuthentication()) {
+                    return null;
+                }
+            }
+
+            const defaultOptions = {
+                headers: {
+                    'Authorization': `Bearer ${authToken}`,
+                    'Content-Type': 'application/json',
+                    ...options.headers
+                }
+            };
+
+            try {
+                const response = await fetch(url, { ...defaultOptions, ...options });
+
+                // Check for unauthorized response
+                if (response.status === 401 || response.status === 403) {
+                    console.warn('Authentication failed, redirecting to login');
+                    logout();
+                    return null;
+                }
+
+                return response;
+            } catch (error) {
+                console.error('API request failed:', error);
+                throw error;
+            }
+        }
+
+        // Update your existing API calls to use authenticated requests
+        async function loadStats() {
+            try {
+                const response = await makeAuthenticatedRequest('/stats');
+                if (!response) return; // Authentication failed
+
+                const stats = await response.json();
+                updateSummaryCards(stats);
+                updateCharts(stats);
+            } catch (error) {
+                console.error('Error loading stats:', error);
+                showError('Failed to load statistics');
+            }
+        }
+
+        async function loadDocuments() {
+            try {
+                const response = await makeAuthenticatedRequest('/documents');
+                if (!response) return; // Authentication failed
+
+                const data = await response.json();
+                allDocuments = data.documents || [];
+                currentPage = 1;
+                renderDocumentsTable();
+                updatePaginationInfo();
+            } catch (error) {
+                console.error('Error loading documents:', error);
+                showError('Failed to load documents');
+            }
+        }
+
+        async function loadProcessingResults() {
+            try {
+                // Fetch the results from the JSON file
+                const response = await fetch('/static/results.json');
+
+                // Check if the response is okay
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                // Parse the JSON data
+                const processingResults = await response.json();
+                console.log(processingResults);
+                currentResults = processingResults;
+                displayProcessingResults(processingResults);
+
+            } catch (error) {
+                document.getElementById('processing-results').innerHTML = `
+                <div class="alert alert-success">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                     No new files to process
+                </div>
+            `;
+            }
+        }
+
+        async function runBatchProcessing() {
+            const button = document.querySelector('.btn-outline-primary');
+            const originalText = button.innerHTML;
+
+            button.innerHTML = '<i class="fas fa-sync fa-spin me-1"></i>Processing...';
+            button.disabled = true;
+
+            // Replace the processing results with a progress bar
+            const processingResults = document.getElementById('processing-results');
+            processingResults.innerHTML = `
+             <div class="progress" style="height: 20px;">
+                 <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%;" id="batch-progress-bar"></div>
+             </div>
+             <div class="text-center mt-2">
+                 <span id="batch-progress-text">0%</span>
+             </div>
+         `;
+
+            let progress = 0;
+            const progressBar = document.getElementById('batch-progress-bar');
+            const progressText = document.getElementById('batch-progress-text');
+
+            // Function to update progress
+            function updateProgress(value) {
+                progress = value;
+                progressBar.style.width = `${progress}%`;
+                progressText.textContent = `${progress}%`;
+            }
+
+            // Simulate progress every second until 90%
+            const interval = setInterval(() => {
+                if (progress < 90) {
+                    progress += 10;
+                    updateProgress(progress);
+                }
+            }, 1000);
+
+            try {
+                const response = await makeAuthenticatedRequest('/data/load', {
+                    method: 'POST'
+                });
+
+                if (!response) {
+                    clearInterval(interval);
+                    button.innerHTML = originalText;
+                    button.disabled = false;
+                    return; // Authentication failed
+                }
+
+                const result = await response.json();
+
+                // Set progress to 100% and clear the interval
+                clearInterval(interval);
+                updateProgress(100);
+
+                // Wait a bit to show 100% progress
+                await new Promise(resolve => setTimeout(resolve, 500));
+
+                // Reload processing results
+                await loadProcessingResults();
+
+                showSuccess('Batch processing completed successfully!');
+            } catch (error) {
+                clearInterval(interval);
+                showError('Batch processing failed');
+                // Optionally, you can revert the processingResults to the original state or show an error message.
+                processingResults.innerHTML = `<div class="alert alert-danger">Batch processing failed. Please try again.</div>`;
+            } finally {
+                button.innerHTML = originalText;
+                button.disabled = false;
+            }
+        }
+
+        // Header interactions
+        function setupHeaderInteractions() {
+            const userMenu = document.getElementById('user-menu');
+            const dropdownMenu = document.getElementById('dropdown-menu');
+
+            userMenu.addEventListener('click', function (e) {
+                e.stopPropagation();
+                const isVisible = dropdownMenu.style.display === 'block';
+                dropdownMenu.style.display = isVisible ? 'none' : 'block';
+            });
+
+            // Close dropdown when clicking outside
+            document.addEventListener('click', function () {
+                dropdownMenu.style.display = 'none';
+            });
+
+            dropdownMenu.addEventListener('click', function (e) {
+                e.stopPropagation();
+            });
+        }
+
+        // Enhanced logout function
+        function logout() {
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('currentUser');
+            authToken = null;
+            currentUser = null;
+            window.location.href = '/';
+        }
+
+        // Display processing results
+        function displayProcessingResults(data) {
+            if (!data || typeof data !== 'object' || !('total_files' in data)) {
+                console.error('Invalid data received:', data);
+                document.getElementById('processing-results').innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Invalid processing results format
+                </div>
+            `;
+                return;
+            }
+
+            const results = data;
+            const successRate = ((results.successful / results.total_files) * 100).toFixed(1);
+
+            // Calculate pagination for successful files
+            const totalSuccessPages = Math.ceil(results.successful_files.length / itemsPerPage);
+            const successStartIndex = currentPageSuccess * itemsPerPage;
+            const successEndIndex = successStartIndex + itemsPerPage;
+            const successFilesToShow = results.successful_files.slice(successStartIndex, successEndIndex);
+
+            // Calculate pagination for failed files
+            const failedEntries = Object.entries(results.failed_files);
+            const totalFailedPages = Math.ceil(failedEntries.length / itemsPerPage);
+            const failedStartIndex = currentPageFailed * itemsPerPage;
+            const failedEndIndex = failedStartIndex + itemsPerPage;
+            const failedFilesToShow = failedEntries.slice(failedStartIndex, failedEndIndex);
+
+            const html = `
+            <div class="row">
+                <div class="col-md-3 text-center">
+                    <div class="mb-3">
+                        <h3 class="fw-bold text-primary">${results.total_files}</h3>
+                        <small class="text-muted">Total Files</small>
+                    </div>
+                </div>
+                <div class="col-md-3 text-center">
+                    <div class="mb-3">
+                        <h3 class="fw-bold text-success">${results.successful}</h3>
+                        <small class="text-muted">Successful</small>
+                    </div>
+                </div>
+                <div class="col-md-3 text-center">
+                    <div class="mb-3">
+                        <h3 class="fw-bold text-danger">${results.failed}</h3>
+                        <small class="text-muted">Failed</small>
+                    </div>
+                </div>
+                <div class="col-md-3 text-center">
+                    <div class="mb-3">
+                        <h3 class="fw-bold text-info">${successRate}%</h3>
+                        <small class="text-muted">Success Rate</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mt-4">
+                <!-- Successful Files Column -->
+                <div class="col-md-6">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6><i class="fas fa-check-circle text-success me-2"></i>Successful Files</h6>
+                        ${results.successful_files.length > itemsPerPage ?
+                    `<small class="text-muted">Showing ${successStartIndex + 1}-${Math.min(successEndIndex, results.successful_files.length)} of ${results.successful_files.length}</small>` :
+                    ''}
+                    </div>
+                    <div class="success-files">
+                        ${successFilesToShow.map(file => `
+                            <div class="d-flex align-items-center mb-2 p-2 border rounded">
+                                <i class="fas fa-file-pdf text-success me-2"></i>
+                                <span class="success-file text-truncate" title="${file}">${file}</span>
+                            </div>
+                        `).join('')}
+                        
+                        ${results.successful_files.length === 0 ? `
+                            <div class="text-muted text-center py-3">
+                                <i class="fas fa-inbox fa-2x mb-2"></i>
+                                <div>No successful files</div>
+                            </div>
+                        ` : ''}
+                    </div>
+                    
+                    <!-- Pagination for Successful Files -->
+                    ${results.successful_files.length > itemsPerPage ?
+                    createPagination(currentPageSuccess, totalSuccessPages, 'success') :
+                    ''}
+                </div>
+
+                <!-- Failed Files Column -->
+                <div class="col-md-6">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6><i class="fas fa-times-circle text-danger me-2"></i>Failed Files</h6>
+                        ${failedEntries.length > itemsPerPage ?
+                    `<small class="text-muted">Showing ${failedStartIndex + 1}-${Math.min(failedEndIndex, failedEntries.length)} of ${failedEntries.length}</small>` :
+                    ''}
+                    </div>
+                    <div class="failed-files">
+                        ${failedFilesToShow.map(([file, error]) => `
+                            <div class="mb-2 p-2 border rounded border-danger">
+                                <div class="d-flex align-items-start">
+                                    <i class="fas fa-file text-danger me-2 mt-1"></i>
+                                    <div class="flex-grow-1">
+                                        <div class="fw-medium text-danger text-truncate" title="${file}">${file}</div>
+                                        <small class="text-muted error-message">Error: ${error}</small>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('')}
+                        
+                        ${failedEntries.length === 0 ? `
+                            <div class="text-muted text-center py-3">
+                                <i class="fas fa-inbox fa-2x mb-2"></i>
+                                <div>No failed files</div>
+                            </div>
+                        ` : ''}
+                    </div>
+                    
+                    <!-- Pagination for Failed Files -->
+                    ${failedEntries.length > itemsPerPage ?
+                    createPagination(currentPageFailed, totalFailedPages, 'failed') :
+                    ''}
+                </div>
+            </div>
+
+            ${results.errors && results.errors.length > 0 ? `
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <h6><i class="fas fa-exclamation-triangle text-warning me-2"></i>Errors</h6>
+                        <div class="alert alert-warning">
+                            ${results.errors.map(error => `<div>${error}</div>`).join('')}
+                        </div>
+                    </div>
+                </div>
+            ` : ''}
+        `;
+
+            document.getElementById('processing-results').innerHTML = html;
+        }
+
+        // Create pagination controls
+        function createPagination(currentPage, totalPages, type) {
+            return `
+            <div class="d-flex justify-content-between align-items-center mt-3">
+                <button class="btn btn-sm btn-outline-secondary ${currentPage === 0 ? 'disabled' : ''}" 
+                        onclick="changePage('${type}', ${currentPage - 1})" 
+                        ${currentPage === 0 ? 'disabled' : ''}>
+                    <i class="fas fa-chevron-left me-1"></i> Previous
+                </button>
+                
+                <span class="text-muted small">
+                    Page ${currentPage + 1} of ${totalPages}
+                </span>
+                
+                <button class="btn btn-sm btn-outline-secondary ${currentPage >= totalPages - 1 ? 'disabled' : ''}" 
+                        onclick="changePage('${type}', ${currentPage + 1})" 
+                        ${currentPage >= totalPages - 1 ? 'disabled' : ''}>
+                    Next <i class="fas fa-chevron-right ms-1"></i>
+                </button>
+            </div>
+        `;
+        }
+
+        // Change page function
+        function changePage(type, newPage) {
+            if (type === 'success') {
+                currentPageSuccess = newPage;
+            } else if (type === 'failed') {
+                currentPageFailed = newPage;
+            }
+
+            if (currentResults) {
+                displayProcessingResults(currentResults);
+            }
+        }
+
+        // Update summary cards with your API data
+        function updateSummaryCards(stats) {
+            document.getElementById('total-documents').textContent = stats.total_documents || 0;
+            document.getElementById('total-sessions').textContent = stats.total_sessions || 0;
+
+            let totalChunks = 0;
+            let fileTypes = new Set();
+
+            if (stats.file_statistics) {
+                stats.file_statistics.forEach(fileStat => {
+                    totalChunks += fileStat.total_chunks || 0;
+                    if (fileStat._id) {
+                        fileTypes.add(fileStat._id);
+                    }
+                });
+            }
+
+            document.getElementById('total-chunks').textContent = totalChunks.toLocaleString();
+            document.getElementById('file-types-count').textContent = fileTypes.size;
+        }
+
+        // Initialize charts
+        function initializeCharts() {
+            charts.typeChart = new Chart(document.getElementById('typeChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        data: [],
+                        backgroundColor: [
+                            '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0',
+                            '#9966FF', '#FF9F40', '#FF6384', '#C9CBCF'
+                        ],
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'right'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    const label = context.label || '';
+                                    const value = context.raw || 0;
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = Math.round((value / total) * 100);
+                                    return `${label}: ${value} (${percentage}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            charts.chunksChart = new Chart(document.getElementById('chunksChart'), {
+                type: 'bar',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Total Chunks',
+                        data: [],
+                        backgroundColor: '#36A2EB',
+                        borderColor: '#2c3e50',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function (value) {
+                                    return value.toLocaleString();
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    return `Chunks: ${context.raw.toLocaleString()}`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Update charts with stats data
+        function updateCharts(stats) {
+            if (stats.file_statistics) {
+                const types = stats.file_statistics.map(stat => stat._id.toUpperCase());
+                const counts = stats.file_statistics.map(stat => stat.count);
+                const chunks = stats.file_statistics.map(stat => stat.total_chunks);
+
+                charts.typeChart.data.labels = types;
+                charts.typeChart.data.datasets[0].data = counts;
+                charts.typeChart.update();
+
+                charts.chunksChart.data.labels = types;
+                charts.chunksChart.data.datasets[0].data = chunks;
+                charts.chunksChart.update();
+            }
+        }
+
+        // Render documents table with pagination
+        function renderDocumentsTable() {
+            const tableBody = document.getElementById('documents-table');
+            tableBody.innerHTML = '';
+
+            const startIndex = (currentPage - 1) * pageSize;
+            const endIndex = startIndex + pageSize;
+            const pageDocuments = allDocuments.slice(startIndex, endIndex);
+
+            if (pageDocuments.length === 0) {
+                tableBody.innerHTML = `
+                <tr>
+                    <td colspan="7" class="text-center text-muted py-4">
+                        <i class="fas fa-folder-open fa-2x mb-3"></i><br>
+                        No documents found
+                    </td>
+                </tr>
+            `;
+                return;
+            }
+
+            pageDocuments.forEach((doc, index) => {
+                const row = `
+                <tr>
+                    <td>${startIndex + index + 1}</td>
+                    <td>
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-${getFileIcon(doc.type)} me-3 text-primary"></i>
+                            <div>
+                                <div class="fw-bold">${escapeHtml(doc.name)}</div>
+                                <small class="text-muted">ID: ${doc.id}</small>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="badge file-type-badge bg-secondary">${doc.type.toUpperCase()}</span>
+                    </td>
+                    <td>${formatBytes(doc.size)}</td>
+                    <td>
+                        <span class="badge bg-info">${doc.chunks}</span>
+                    </td>
+                    <td>
+                        <small class="text-muted" title="${escapeHtml(doc.path)}">
+                            ${truncatePath(doc.path)}
+                        </small>
+                    </td>
+                    <td>
+                        <div class="btn-group btn-group-sm">
+                            <button class="btn btn-outline-primary" onclick="viewDocument('${doc.id}')" title="View">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="btn btn-outline-info" onclick="analyzeDocument('${doc.id}')" title="Analyze">
+                                <i class="fas fa-chart-bar"></i>
+                            </button>
+                            <button class="btn btn-outline-danger" onclick="deleteDocument('${doc.id}')" title="Delete">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+                tableBody.innerHTML += row;
+            });
+        }
+
+        // Search documents
+        async function searchDocuments() {
+            const query = document.getElementById('search-query').value;
+            if (!query.trim()) {
+                loadDocuments();
+                return;
+            }
+
+            try {
+                const response = await makeAuthenticatedRequest(`/search/documents?query=${encodeURIComponent(query)}&limit=50`);
+                if (!response) return;
+
+                const data = await response.json();
+                allDocuments = data.results || [];
+                currentPage = 1;
+                renderDocumentsTable();
+                updatePaginationInfo();
+            } catch (error) {
+                console.error('Error searching documents:', error);
+                showError('Search failed');
+            }
+        }
+
+        // Utility functions
+        function formatBytes(bytes, decimals = 2) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const dm = decimals < 0 ? 0 : decimals;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+        }
+
+        function getFileIcon(fileType) {
+            const type = (fileType || '').toLowerCase();
+            if (type.includes('pdf')) return 'file-pdf';
+            if (type.includes('word') || type.includes('doc')) return 'file-word';
+            if (type.includes('excel') || type.includes('sheet')) return 'file-excel';
+            if (type.includes('image')) return 'file-image';
+            if (type.includes('text')) return 'file-alt';
+            return 'file';
+        }
+
+        function truncatePath(path, maxLength = 50) {
+            if (!path) return 'N/A';
+            if (path.length <= maxLength) return path;
+            return '...' + path.substring(path.length - maxLength);
+        }
+
+        function escapeHtml(unsafe) {
+            return unsafe
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        function updatePaginationInfo() {
+            const start = (currentPage - 1) * pageSize + 1;
+            const end = Math.min(currentPage * pageSize, allDocuments.length);
+            document.getElementById('showing-count').textContent = `${start}-${end}`;
+            document.getElementById('total-count').textContent = allDocuments.length;
+        }
+
+        function nextPage() {
+            const totalPages = Math.ceil(allDocuments.length / pageSize);
+            if (currentPage < totalPages) {
+                currentPage++;
+                renderDocumentsTable();
+                updatePaginationInfo();
+            }
+        }
+
+        function previousPage() {
+            if (currentPage > 1) {
+                currentPage--;
+                renderDocumentsTable();
+                updatePaginationInfo();
+            }
+        }
+
+        function refreshDashboard() {
+            loadStats();
+            loadDocuments();
+            loadProcessingResults();
+        }
+
+        function viewDocument(id) {
+            alert(`View document: ${id}\nThis would open a document viewer in a real application.`);
+        }
+
+        function analyzeDocument(id) {
+            alert(`Analyze document: ${id}\nThis would show detailed analytics for the document.`);
+        }
+
+        function deleteDocument(id) {
+            if (confirm('Are you sure you want to delete this document?')) {
+                alert(`Delete document: ${id}\nThis would delete the document in a real application.`);
+            }
+        }
+
+        function showError(message) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = 'alert alert-danger alert-dismissible fade show position-fixed';
+            alertDiv.style.top = '100px';
+            alertDiv.style.right = '20px';
+            alertDiv.style.zIndex = '9999';
+            alertDiv.innerHTML = `
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+            document.body.appendChild(alertDiv);
+            setTimeout(() => {
+                if (alertDiv.parentNode) {
+                    alertDiv.remove();
+                }
+            }, 5000);
+        }
+
+        function showSuccess(message) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = 'alert alert-success alert-dismissible fade show position-fixed';
+            alertDiv.style.top = '100px';
+            alertDiv.style.right = '20px';
+            alertDiv.style.zIndex = '9999';
+            alertDiv.innerHTML = `
+            <i class="fas fa-check-circle me-2"></i>
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+            document.body.appendChild(alertDiv);
+            setTimeout(() => {
+                if (alertDiv.parentNode) {
+                    alertDiv.remove();
+                }
+            }, 5000);
+        }
+
+        // Add CSS for better styling
+        const additionalStyles = `
+        .text-truncate {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .error-message {
+            word-break: break-word;
+            font-size: 0.875em;
+        }
+        .border-danger {
+            border-color: #dc3545 !important;
+        }
+    `;
+        const styleSheet = document.createElement("style");
+        styleSheet.innerText = additionalStyles;
+        document.head.appendChild(styleSheet);
+
+        // Auto-refresh every 30 seconds
+        setInterval(refreshDashboard, 30000);
+    </script>
+</body>
+
+</html>

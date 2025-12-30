@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/x-icon" href="/static/logo.jpg">
+    <title>AI Assistant</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            padding: 60px 20px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 3.5em;
+            margin-bottom: 20px;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .header p {
+            font-size: 1.3em;
+            margin-bottom: 40px;
+            opacity: 0.9;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            line-height: 1.6;
+        }
+
+        .cta-buttons {
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 15px 30px;
+            margin: 10px;
+            border: none;
+            border-radius: 25px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: white;
+            color: #667eea;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-3px);
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-top: 0px;
+            padding: 0 20px;
+        }
+
+        .feature-card {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .feature-icon {
+            font-size: 3em;
+            margin-bottom: 20px;
+        }
+
+        .feature-card h3 {
+            margin-bottom: 15px;
+            color: #2c3e50;
+        }
+
+        .feature-card p {
+            color: #6c757d;
+            line-height: 1.6;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+            max-width: 400px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .modal-header h2 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .modal-header p {
+            color: #6c757d;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn-modal {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+        }
+
+        .btn-modal-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-modal-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-modal-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .error-message {
+            color: #dc3545;
+            font-size: 0.9em;
+            margin-top: 5px;
+            display: none;
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #6c757d;
+            padding: 5px;
+        }
+
+        .close-modal:hover {
+            color: #333;
+        }
+
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2.5em;
+            }
+
+            .features {
+                grid-template-columns: 1fr;
+            }
+
+            .modal-content {
+                padding: 30px 20px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 AI Assistant</h1>
+            <p>Intelligent document search and conversational AI powered by advanced machine learning. Chat with your
+                documents and get instant answers.</p>
+
+            <div class="cta-buttons">
+                <button class="btn btn-primary" onclick="showLoginModal()">
+                    🚀 Get Started
+                </button>
+            </div>
+        </div>
+
+        <div class="features">
+            <div class="feature-card">
+                <div class="feature-icon">🔍</div>
+                <h3>Smart Document Search</h3>
+                <p>Search through your documents using natural language and get precise answers from your content
+                    instantly.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">💬</div>
+                <h3>Conversational AI</h3>
+                <p>Engage in natural conversations with our advanced AI that understands context and remembers your chat
+                    history.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">📚</div>
+                <h3>Chat History</h3>
+                <p>All your conversations are saved and easily accessible. Continue where you left off anytime.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Login Modal -->
+    <div class="modal" id="loginModal">
+        <div class="modal-content">
+            <button class="close-modal" onclick="hideLoginModal()">×</button>
+
+            <div class="modal-header">
+                <h2>Welcome Back! 👋</h2>
+                <p>Sign in to your AI Assistant account</p>
+            </div>
+            <form id="loginForm" onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label for="login-username">Username</label>
+                    <input type="text" id="login-username" placeholder="Enter username" required>
+                    <div class="error-message" id="login-error"></div>
+                </div>
+                <div class="form-group">
+                    <label for="login-password">Password</label>
+                    <input type="password" id="login-password" placeholder="Enter password" required>
+
+                </div>
+                <div>
+                    <input type="checkbox" class="form-check-input me-2 justify-content-start" id="show-password"
+                        onclick="togglePasswordVisibility()">
+                    <label class="d-flex align-items-center">
+                        Show Password
+                    </label>
+                </div>
+                <br />
+                <button type="submit" class="btn-modal btn-modal-primary" id="login-btn">
+                    Sign In
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function togglePasswordVisibility() {
+            const passwordInput = document.getElementById('login-password');
+            const showPasswordCheckbox = document.getElementById('show-password');
+
+            if (showPasswordCheckbox.checked) {
+                passwordInput.type = "text";
+            } else {
+                passwordInput.type = "password";
+            }
+        }
+    </script>
+
+    <script>
+        let currentUser = null;
+        let authToken = null;
+
+        // Check if user is already logged in
+        function checkExistingSession() {
+            const savedToken = localStorage.getItem('authToken');
+            const savedUser = localStorage.getItem('currentUser');
+
+            if (savedToken && savedUser) {
+                currentUser = JSON.parse(savedUser);
+                authToken = savedToken;
+                // User is already logged in, we can redirect to chat or show welcome
+                console.log('User already logged in:', currentUser.username);
+            }
+        }
+
+        // Modal functions
+        function showLoginModal() {
+            document.getElementById('loginModal').classList.add('active');
+            document.getElementById('login-username').focus();
+        }
+
+        function hideLoginModal() {
+            document.getElementById('loginModal').classList.remove('active');
+            // Clear form
+            document.getElementById('loginForm').reset();
+            hideError('login-error');
+        }
+
+        // Utility functions
+        function setLoading(button, isLoading) {
+            if (isLoading) {
+                button.disabled = true;
+                button.innerHTML = 'Signing In...';
+                button.classList.add('loading');
+            } else {
+                button.disabled = false;
+                button.innerHTML = 'Sign In';
+                button.classList.remove('loading');
+            }
+        }
+
+        function showError(elementId, message) {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            element.style.display = 'block';
+        }
+
+        function hideError(elementId) {
+            const element = document.getElementById(elementId);
+            element.style.display = 'none';
+        }
+
+        // Login form handler
+        async function handleLogin(event) {
+            event.preventDefault();
+
+            const username = document.getElementById('login-username').value;
+            const password = document.getElementById('login-password').value;
+            const loginBtn = document.getElementById('login-btn');
+
+            // Hide previous errors
+            hideError('login-error');
+
+            // Validate inputs
+            if (!username || !password) {
+                showError('login-error', 'Please fill in all fields');
+                return;
+            }
+
+            setLoading(loginBtn, true);
+
+            try {
+                const response = await fetch('/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        username: username,
+                        password: password
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    // Login successful
+                    authToken = data.access_token;
+                    currentUser = data.user;
+
+                    // Save to localStorage
+                    localStorage.setItem('authToken', authToken);
+                    localStorage.setItem('currentUser', JSON.stringify(currentUser));
+
+                    // Hide modal
+                    hideLoginModal();
+
+                    // Redirect to chat page
+                    window.location.href = '/chat';
+
+                } else {
+                    // Login failed
+                    showError('login-error', data.detail || 'Login failed. Please check your credentials.');
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                showError('login-error', 'Network error. Please try again.');
+            } finally {
+                setLoading(loginBtn, false);
+            }
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('loginModal').addEventListener('click', function (event) {
+            if (event.target === this) {
+                hideLoginModal();
+            }
+        });
+
+        // Close modal with Escape key
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape') {
+                hideLoginModal();
+            }
+        });
+
+        // Check for existing session on page load
+        document.addEventListener('DOMContentLoaded', function () {
+            checkExistingSession();
+        });
+    </script>
+</body>
+<hr>
+<footer
+    style="background: rgba(255, 255, 255, 0.95); padding: 40px 20px; font-family: 'Roboto', sans-serif; color: #333;">
+    <div class="container">
+        <div class="footer-content" style="text-align: center;">
+            <p style="margin-top: 30px; font-size: 0.9em; color: #2682d3;">
+                © <span id="currentYear"></span> <strong>Develop by Befikadu Legesse.</strong> AI Assistant - All rights
+                reserved.
+            </p>
+        </div>
+    </div>
+</footer>
+
+<!-- Add Google Fonts in the <head> section -->
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+
+<!-- Dynamic Year Script -->
+<script>
+    document.getElementById('currentYear').textContent = new Date().getFullYear();
+</script>
+
+</html>
