@@ -47,13 +47,9 @@ async def shutdown_event():
 
 if __name__ == "__main__":
     import uvicorn
-    
-    # Get port from environment variable or default to 8000
-    port = int(os.environ.get("PORT", 8000))
-    
     uvicorn.run(
         "main:app",
-        host="0.0.0.0",  # Important: Bind to all interfaces
-        port=port,
-        reload=False  # Disable reload in production
+        host=settings.APP_HOST,
+        port=settings.APP_PORT,
+        reload=True
     )
